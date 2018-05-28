@@ -39,9 +39,9 @@ index 46b04be369..9dbeea1b9e 100644
          }
  
 +        if (first_constant)
-+            *first_constant /= 16;
++            first_constant[i] /= 16;
 +        if (num_constants)
-+            *num_constants /= 16;
++            num_constants[i] /= 16;
          buffer_impl = wined3d_buffer_get_parent(wined3d_buffer);
          buffers[i] = &buffer_impl->ID3D11Buffer_iface;
          ID3D11Buffer_AddRef(buffers[i]);
