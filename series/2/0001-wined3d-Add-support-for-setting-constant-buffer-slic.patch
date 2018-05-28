@@ -33,8 +33,8 @@ index d75ebcfe3c..51c236ef39 100644
  
          wined3d_device_set_constant_buffer(device->wined3d_device, type, start_slot + i,
 -                buffer ? buffer->wined3d_buffer : NULL);
-+                buffer ? buffer->wined3d_buffer : NULL, first_constant ? first_constant[i]*16 : 0,
-+                num_constants ? num_constants[i]*16 : 0);
++                buffer ? buffer->wined3d_buffer : NULL, first_constant ? first_constant[i] * 16 : 0,
++                num_constants ? num_constants[i] * 16 : 0);
      }
      wined3d_mutex_unlock();
  }

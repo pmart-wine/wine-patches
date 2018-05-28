@@ -31,8 +31,8 @@ index 46b04be369..9dbeea1b9e 100644
  
          if (!(wined3d_buffer = wined3d_device_get_constant_buffer(device->wined3d_device,
 -                type, start_slot + i)))
-+                type, start_slot + i, first_constant ? first_constant+i : NULL,
-+                num_constants ? num_constants+i : NULL)))
++                type, start_slot + i, first_constant ? first_constant + i : NULL,
++                num_constants ? num_constants + i : NULL)))
          {
              buffers[i] = NULL;
              continue;
