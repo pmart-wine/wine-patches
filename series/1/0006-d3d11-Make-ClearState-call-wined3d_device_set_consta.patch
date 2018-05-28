@@ -1,0 +1,45 @@
+From 2145048c60347448adaf44b0feb344bc40610762 Mon Sep 17 00:00:00 2001
+From: Pablo Martin <pmartXXXXXX>
+Date: Mon, 28 May 2018 16:41:33 +0200
+Subject: [PATCH 6/8] d3d11: Make ClearState call
+ wined3d_device_set_constant_buffer directly.
+
+Signed-off-by: Pablo Martin <pmartXXXXXX>
+---
+ dlls/d3d11/device.c | 12 ++++--------
+ 1 file changed, 4 insertions(+), 8 deletions(-)
+
+diff --git a/dlls/d3d11/device.c b/dlls/d3d11/device.c
+index d231284db3..6911333d22 100644
+--- a/dlls/d3d11/device.c
++++ b/dlls/d3d11/device.c
+@@ -2385,7 +2385,7 @@ static void STDMETHODCALLTYPE d3d11_immediate_context_ClearState(ID3D11DeviceCon
+ {
+     struct d3d_device *device = device_from_immediate_ID3D11DeviceContext1(iface);
+     static const float blend_factor[] = {1.0f, 1.0f, 1.0f, 1.0f};
+-    unsigned int i;
++    unsigned int i, j;
+ 
+     TRACE("iface %p.\n", iface);
+ 
+@@ -2414,14 +2414,10 @@ static void STDMETHODCALLTYPE d3d11_immediate_context_ClearState(ID3D11DeviceCon
+         wined3d_device_set_ps_resource_view(device->wined3d_device, i, NULL);
+         wined3d_device_set_cs_resource_view(device->wined3d_device, i, NULL);
+     }
+-    for (i = 0; i < D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT; ++i)
++    for (j = 0; i < WINED3D_SHADER_TYPE_COUNT; ++j)
+     {
+-        wined3d_device_set_vs_cb(device->wined3d_device, i, NULL);
+-        wined3d_device_set_hs_cb(device->wined3d_device, i, NULL);
+-        wined3d_device_set_ds_cb(device->wined3d_device, i, NULL);
+-        wined3d_device_set_gs_cb(device->wined3d_device, i, NULL);
+-        wined3d_device_set_ps_cb(device->wined3d_device, i, NULL);
+-        wined3d_device_set_cs_cb(device->wined3d_device, i, NULL);
++        for (i = 0; i < D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT; ++i)
++            wined3d_device_set_constant_buffer(device->wined3d_device, j, i, NULL);
+     }
+     for (i = 0; i < D3D11_IA_VERTEX_INPUT_RESOURCE_SLOT_COUNT; ++i)
+     {
+-- 
+2.14.1
+

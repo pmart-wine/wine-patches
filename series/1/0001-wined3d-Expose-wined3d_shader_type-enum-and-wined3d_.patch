@@ -1,0 +1,160 @@
+From b37c1fbfb4794388efd665d406864e05c4fbfa67 Mon Sep 17 00:00:00 2001
+From: Pablo Martin <pmartXXXXXXXX>
+Date: Sun, 27 May 2018 07:41:55 +0200
+Subject: [PATCH 1/8] wined3d: Expose wined3d_shader_type enum and
+ wined3d_device_*_constant_buffer methods.
+
+Signed-off-by: Pablo Martin <pmartXXXXXXXX>
+---
+This patch series is a preparation for implementing the Get/SetConstantBuffer1
+methods in an upcoming series. Those methods will also be reusing the same
+code, so in the end 12 functions are reusing the code for each method. This
+series makes the upcoming one much more reasonable by removing duplicated code
+that with the next series would become even more duplicated.
+
+Here goes a small explanation of each patch role in this series:
+
+0001. To implement the helper method, it is needed to directly call the wined3d
+      constant_buffer methods directly, instead of relying on the intermediate
+      methods, so the first step here is exposing those and the associated enum.
+000[23]. Here I am implementing the actual helper methods for d3d11, this is
+         what I need for the next series.
+
+Now, the rest of the series is just continuing the refactor until the specific
+methods can be completely removed and we make good use of the newly exposed
+generic methods everywhere. I don't really need these for the next series, but
+I think it makes sense.
+
+000[4-5]. Helper methods for d3d10 similar to the ones from 2 and 3.
+0006. Also call the generic buffer methods from wined3d directly from SetState
+      so now they have no users.
+0007: Since the specific methods have no more users, now we could remove them.
+0008: Now it's sensible to add a trace to the generic methods, since the
+      specific ones are not used any more and where the ones doing the tracing
+      at wined3d level.
+
+A similar refactoring can be done later for XX[SG]etShaderResources and
+XX[SG]etShaderSamplers methods reducing a bit of duplicate code and also
+removing even more specific methods from wined3d. Also note how then ClearState
+will have just one loop over SHADER_TYPES making the whole thing pretty rounded
+up.
+
+ dlls/wined3d/device.c          |  4 ++--
+ dlls/wined3d/wined3d.spec      |  2 ++
+ dlls/wined3d/wined3d_private.h | 14 --------------
+ include/wine/wined3d.h         | 18 ++++++++++++++++++
+ 4 files changed, 22 insertions(+), 16 deletions(-)
+
+diff --git a/dlls/wined3d/device.c b/dlls/wined3d/device.c
+index 0f590c40fe..f7866ab507 100644
+--- a/dlls/wined3d/device.c
++++ b/dlls/wined3d/device.c
+@@ -2227,7 +2227,7 @@ struct wined3d_shader * CDECL wined3d_device_get_vertex_shader(const struct wine
+     return device->state.shader[WINED3D_SHADER_TYPE_VERTEX];
+ }
+ 
+-static void wined3d_device_set_constant_buffer(struct wined3d_device *device,
++void CDECL wined3d_device_set_constant_buffer(struct wined3d_device *device,
+         enum wined3d_shader_type type, UINT idx, struct wined3d_buffer *buffer)
+ {
+     struct wined3d_buffer *prev;
+@@ -2258,7 +2258,7 @@ void CDECL wined3d_device_set_vs_cb(struct wined3d_device *device, UINT idx, str
+     wined3d_device_set_constant_buffer(device, WINED3D_SHADER_TYPE_VERTEX, idx, buffer);
+ }
+ 
+-static struct wined3d_buffer *wined3d_device_get_constant_buffer(const struct wined3d_device *device,
++struct wined3d_buffer * CDECL wined3d_device_get_constant_buffer(const struct wined3d_device *device,
+         enum wined3d_shader_type shader_type, unsigned int idx)
+ {
+     if (idx >= MAX_CONSTANT_BUFFERS)
+diff --git a/dlls/wined3d/wined3d.spec b/dlls/wined3d/wined3d.spec
+index db50a44295..c397f676e3 100644
+--- a/dlls/wined3d/wined3d.spec
++++ b/dlls/wined3d/wined3d.spec
+@@ -61,6 +61,7 @@
+ @ cdecl wined3d_device_get_clip_plane(ptr long ptr)
+ @ cdecl wined3d_device_get_clip_status(ptr ptr)
+ @ cdecl wined3d_device_get_compute_shader(ptr)
++@ cdecl wined3d_device_get_constant_buffer(ptr long long)
+ @ cdecl wined3d_device_get_creation_parameters(ptr ptr)
+ @ cdecl wined3d_device_get_cs_cb(ptr long)
+ @ cdecl wined3d_device_get_cs_resource_view(ptr long)
+@@ -137,6 +138,7 @@
+ @ cdecl wined3d_device_set_clip_plane(ptr long ptr)
+ @ cdecl wined3d_device_set_clip_status(ptr ptr)
+ @ cdecl wined3d_device_set_compute_shader(ptr ptr)
++@ cdecl wined3d_device_set_constant_buffer(ptr long long ptr)
+ @ cdecl wined3d_device_set_cs_cb(ptr long ptr)
+ @ cdecl wined3d_device_set_cs_resource_view(ptr long ptr)
+ @ cdecl wined3d_device_set_cs_sampler(ptr long ptr)
+diff --git a/dlls/wined3d/wined3d_private.h b/dlls/wined3d/wined3d_private.h
+index f2c4cd669c..c30bb139d3 100644
+--- a/dlls/wined3d/wined3d_private.h
++++ b/dlls/wined3d/wined3d_private.h
+@@ -926,20 +926,6 @@ enum WINED3D_SHADER_INSTRUCTION_HANDLER
+     WINED3DSIH_TABLE_SIZE
+ };
+ 
+-enum wined3d_shader_type
+-{
+-    WINED3D_SHADER_TYPE_PIXEL,
+-    WINED3D_SHADER_TYPE_VERTEX,
+-    WINED3D_SHADER_TYPE_GEOMETRY,
+-    WINED3D_SHADER_TYPE_HULL,
+-    WINED3D_SHADER_TYPE_DOMAIN,
+-    WINED3D_SHADER_TYPE_GRAPHICS_COUNT,
+-
+-    WINED3D_SHADER_TYPE_COMPUTE = WINED3D_SHADER_TYPE_GRAPHICS_COUNT,
+-    WINED3D_SHADER_TYPE_COUNT,
+-    WINED3D_SHADER_TYPE_INVALID = WINED3D_SHADER_TYPE_COUNT,
+-};
+-
+ struct wined3d_shader_version
+ {
+     enum wined3d_shader_type type;
+diff --git a/include/wine/wined3d.h b/include/wine/wined3d.h
+index e15269f3b2..17cc3b8751 100644
+--- a/include/wine/wined3d.h
++++ b/include/wine/wined3d.h
+@@ -843,6 +843,20 @@ enum wined3d_shader_byte_code_format
+     WINED3D_SHADER_BYTE_CODE_FORMAT_SM4     = 1,
+ };
+ 
++enum wined3d_shader_type
++{
++    WINED3D_SHADER_TYPE_PIXEL,
++    WINED3D_SHADER_TYPE_VERTEX,
++    WINED3D_SHADER_TYPE_GEOMETRY,
++    WINED3D_SHADER_TYPE_HULL,
++    WINED3D_SHADER_TYPE_DOMAIN,
++    WINED3D_SHADER_TYPE_GRAPHICS_COUNT,
++
++    WINED3D_SHADER_TYPE_COMPUTE = WINED3D_SHADER_TYPE_GRAPHICS_COUNT,
++    WINED3D_SHADER_TYPE_COUNT,
++    WINED3D_SHADER_TYPE_INVALID = WINED3D_SHADER_TYPE_COUNT,
++};
++
+ #define WINED3DCOLORWRITEENABLE_RED                             (1u << 0)
+ #define WINED3DCOLORWRITEENABLE_GREEN                           (1u << 1)
+ #define WINED3DCOLORWRITEENABLE_BLUE                            (1u << 2)
+@@ -2247,6 +2261,8 @@ HRESULT __cdecl wined3d_device_get_clip_plane(const struct wined3d_device *devic
+ HRESULT __cdecl wined3d_device_get_clip_status(const struct wined3d_device *device,
+         struct wined3d_clip_status *clip_status);
+ struct wined3d_shader * __cdecl wined3d_device_get_compute_shader(const struct wined3d_device *device);
++struct wined3d_buffer * __cdecl wined3d_device_get_constant_buffer(const struct wined3d_device *device,
++        enum wined3d_shader_type shader_type, unsigned int idx);
+ void __cdecl wined3d_device_get_creation_parameters(const struct wined3d_device *device,
+         struct wined3d_device_creation_parameters *creation_parameters);
+ struct wined3d_buffer * __cdecl wined3d_device_get_cs_cb(const struct wined3d_device *device, unsigned int idx);
+@@ -2365,6 +2381,8 @@ HRESULT __cdecl wined3d_device_set_clip_plane(struct wined3d_device *device,
+ HRESULT __cdecl wined3d_device_set_clip_status(struct wined3d_device *device,
+         const struct wined3d_clip_status *clip_status);
+ void __cdecl wined3d_device_set_compute_shader(struct wined3d_device *device, struct wined3d_shader *shader);
++void __cdecl wined3d_device_set_constant_buffer(struct wined3d_device *device, enum wined3d_shader_type type, UINT idx,
++        struct wined3d_buffer *buffer);
+ void __cdecl wined3d_device_set_cs_cb(struct wined3d_device *device, unsigned int idx, struct wined3d_buffer *buffer);
+ void __cdecl wined3d_device_set_cs_resource_view(struct wined3d_device *device,
+         unsigned int idx, struct wined3d_shader_resource_view *view);
+-- 
+2.14.1
+

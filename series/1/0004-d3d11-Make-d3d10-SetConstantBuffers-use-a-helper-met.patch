@@ -1,0 +1,106 @@
+From 874582c0d66a73db4904669b40802ba05b51d71d Mon Sep 17 00:00:00 2001
+From: Pablo Martin <pmartXXXX>
+Date: Mon, 28 May 2018 14:43:40 +0200
+Subject: [PATCH 4/8] d3d11: Make d3d10 *SetConstantBuffers use a helper
+ method.
+
+Signed-off-by: Pablo Martin <pmartXXXXX>
+---
+ dlls/d3d11/device.c | 47 +++++++++++++++++------------------------------
+ 1 file changed, 17 insertions(+), 30 deletions(-)
+
+diff --git a/dlls/d3d11/device.c b/dlls/d3d11/device.c
+index a35b82fe3d..0fdbb3c366 100644
+--- a/dlls/d3d11/device.c
++++ b/dlls/d3d11/device.c
+@@ -3890,26 +3890,33 @@ static ULONG STDMETHODCALLTYPE d3d10_device_Release(ID3D10Device1 *iface)
+ 
+ /* ID3D10Device methods */
+ 
+-static void STDMETHODCALLTYPE d3d10_device_VSSetConstantBuffers(ID3D10Device1 *iface,
+-        UINT start_slot, UINT buffer_count, ID3D10Buffer *const *buffers)
++static void d3d10_device_set_constant_buffers(ID3D10Device1 *iface,
++        enum wined3d_shader_type type, UINT start_slot, UINT buffer_count, ID3D10Buffer *const *buffers)
+ {
+     struct d3d_device *device = impl_from_ID3D10Device(iface);
+     unsigned int i;
+ 
+-    TRACE("iface %p, start_slot %u, buffer_count %u, buffers %p.\n",
+-            iface, start_slot, buffer_count, buffers);
+-
+     wined3d_mutex_lock();
+     for (i = 0; i < buffer_count; ++i)
+     {
+         struct d3d_buffer *buffer = unsafe_impl_from_ID3D10Buffer(buffers[i]);
+ 
+-        wined3d_device_set_vs_cb(device->wined3d_device, start_slot + i,
++        wined3d_device_set_constant_buffer(device->wined3d_device, type, start_slot + i,
+                 buffer ? buffer->wined3d_buffer : NULL);
+     }
+     wined3d_mutex_unlock();
+ }
+ 
++static void STDMETHODCALLTYPE d3d10_device_VSSetConstantBuffers(ID3D10Device1 *iface,
++        UINT start_slot, UINT buffer_count, ID3D10Buffer *const *buffers)
++{
++    TRACE("iface %p, start_slot %u, buffer_count %u, buffers %p.\n",
++            iface, start_slot, buffer_count, buffers);
++
++    d3d10_device_set_constant_buffers(iface, WINED3D_SHADER_TYPE_VERTEX, start_slot,
++            buffer_count, buffers);
++}
++
+ static void STDMETHODCALLTYPE d3d10_device_PSSetShaderResources(ID3D10Device1 *iface,
+         UINT start_slot, UINT view_count, ID3D10ShaderResourceView *const *views)
+ {
+@@ -4006,21 +4013,11 @@ static void STDMETHODCALLTYPE d3d10_device_Draw(ID3D10Device1 *iface, UINT verte
+ static void STDMETHODCALLTYPE d3d10_device_PSSetConstantBuffers(ID3D10Device1 *iface,
+         UINT start_slot, UINT buffer_count, ID3D10Buffer *const *buffers)
+ {
+-    struct d3d_device *device = impl_from_ID3D10Device(iface);
+-    unsigned int i;
+-
+     TRACE("iface %p, start_slot %u, buffer_count %u, buffers %p.\n",
+             iface, start_slot, buffer_count, buffers);
+ 
+-    wined3d_mutex_lock();
+-    for (i = 0; i < buffer_count; ++i)
+-    {
+-        struct d3d_buffer *buffer = unsafe_impl_from_ID3D10Buffer(buffers[i]);
+-
+-        wined3d_device_set_ps_cb(device->wined3d_device, start_slot + i,
+-                buffer ? buffer->wined3d_buffer : NULL);
+-    }
+-    wined3d_mutex_unlock();
++    d3d10_device_set_constant_buffers(iface, WINED3D_SHADER_TYPE_PIXEL, start_slot,
++            buffer_count, buffers);
+ }
+ 
+ static void STDMETHODCALLTYPE d3d10_device_IASetInputLayout(ID3D10Device1 *iface,
+@@ -4110,21 +4107,11 @@ static void STDMETHODCALLTYPE d3d10_device_DrawInstanced(ID3D10Device1 *iface,
+ static void STDMETHODCALLTYPE d3d10_device_GSSetConstantBuffers(ID3D10Device1 *iface,
+         UINT start_slot, UINT buffer_count, ID3D10Buffer *const *buffers)
+ {
+-    struct d3d_device *device = impl_from_ID3D10Device(iface);
+-    unsigned int i;
+-
+     TRACE("iface %p, start_slot %u, buffer_count %u, buffers %p.\n",
+             iface, start_slot, buffer_count, buffers);
+ 
+-    wined3d_mutex_lock();
+-    for (i = 0; i < buffer_count; ++i)
+-    {
+-        struct d3d_buffer *buffer = unsafe_impl_from_ID3D10Buffer(buffers[i]);
+-
+-        wined3d_device_set_gs_cb(device->wined3d_device, start_slot + i,
+-                buffer ? buffer->wined3d_buffer : NULL);
+-    }
+-    wined3d_mutex_unlock();
++    d3d10_device_set_constant_buffers(iface, WINED3D_SHADER_TYPE_GEOMETRY, start_slot,
++            buffer_count, buffers);
+ }
+ 
+ static void STDMETHODCALLTYPE d3d10_device_GSSetShader(ID3D10Device1 *iface, ID3D10GeometryShader *shader)
+-- 
+2.14.1
+
