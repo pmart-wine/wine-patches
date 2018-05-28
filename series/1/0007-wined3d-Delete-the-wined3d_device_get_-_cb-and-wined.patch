@@ -1,7 +1,7 @@
 From 39e7f339d4342bac10a1400b5f296eecbc2ffc7c Mon Sep 17 00:00:00 2001
 From: Pablo Martin <pmartXXXXXXXX>
 Date: Sun, 27 May 2018 08:36:17 +0200
-Subject: [PATCH 7/8] wined3d: Delete the wined3d_device_get_*_cb and
+Subject: [PATCH 7/7] wined3d: Delete the wined3d_device_get_*_cb and
  wined3d_device_set_*_cb methods.
 
 Signed-off-by: Pablo Martin <pmartXXXXXXXX>

@@ -1,7 +1,7 @@
 From 1cec45c804b8792e8207969269fae8461be6257c Mon Sep 17 00:00:00 2001
 From: Pablo Martin <pmartXXXXXXXXXXX>
 Date: Mon, 28 May 2018 15:52:06 +0200
-Subject: [PATCH 5/8] d3d11: Make d3d10 *GetConstantBuffers use a helper
+Subject: [PATCH 5/7] d3d11: Make d3d10 *GetConstantBuffers use a helper
  method.
 
 Signed-off-by: Pablo Martin <pmartXXXXXXXX>

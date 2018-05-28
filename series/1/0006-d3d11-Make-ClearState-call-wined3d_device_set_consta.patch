@@ -1,7 +1,7 @@
 From 2145048c60347448adaf44b0feb344bc40610762 Mon Sep 17 00:00:00 2001
 From: Pablo Martin <pmartXXXXXX>
 Date: Mon, 28 May 2018 16:41:33 +0200
-Subject: [PATCH 6/8] d3d11: Make ClearState call
+Subject: [PATCH 6/7] d3d11: Make ClearState call
  wined3d_device_set_constant_buffer directly.
 
 Signed-off-by: Pablo Martin <pmartXXXXXX>
