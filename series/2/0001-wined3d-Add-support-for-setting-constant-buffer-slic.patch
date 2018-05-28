@@ -1,0 +1,288 @@
+From c8df4f16ca6fc02313a096659e46ce7255fbfa1f Mon Sep 17 00:00:00 2001
+From: Kimmo Myllyvirta <kimmoXXXXXXXX>
+Date: Sun, 27 May 2018 09:54:42 +0200
+Subject: [PATCH 1/5] wined3d: Add support for setting constant buffer slices.
+
+Signed-off-by: Pablo Martin <pmartXXXXXXXXX>
+---
+ dlls/d3d11/device.c            | 32 +++++++++++++++++---------------
+ dlls/wined3d/cs.c              |  8 +++++++-
+ dlls/wined3d/device.c          | 20 ++++++++++++++++----
+ dlls/wined3d/state.c           |  9 +++++++--
+ dlls/wined3d/wined3d.spec      |  2 +-
+ dlls/wined3d/wined3d_private.h |  4 +++-
+ include/wine/wined3d.h         |  2 +-
+ 7 files changed, 52 insertions(+), 25 deletions(-)
+
+diff --git a/dlls/d3d11/device.c b/dlls/d3d11/device.c
+index e1dd87a67d..46b04be369 100644
+--- a/dlls/d3d11/device.c
++++ b/dlls/d3d11/device.c
+@@ -138,7 +138,8 @@ static HRESULT STDMETHODCALLTYPE d3d11_immediate_context_SetPrivateDataInterface
+ }
+ 
+ static void d3d11_immediate_context_set_constant_buffers(ID3D11DeviceContext1 *iface,
+-        enum wined3d_shader_type type, UINT start_slot, UINT buffer_count, ID3D11Buffer *const *buffers)
++        enum wined3d_shader_type type, UINT start_slot, UINT buffer_count, ID3D11Buffer *const *buffers,
++        const UINT *first_constant, const UINT *num_constants)
+ {
+     struct d3d_device *device = device_from_immediate_ID3D11DeviceContext1(iface);
+     unsigned int i;
+@@ -149,7 +150,8 @@ static void d3d11_immediate_context_set_constant_buffers(ID3D11DeviceContext1 *i
+         struct d3d_buffer *buffer = unsafe_impl_from_ID3D11Buffer(buffers[i]);
+ 
+         wined3d_device_set_constant_buffer(device->wined3d_device, type, start_slot + i,
+-                buffer ? buffer->wined3d_buffer : NULL);
++                buffer ? buffer->wined3d_buffer : NULL, first_constant ? first_constant[i]*16 : 0,
++                num_constants ? num_constants[i]*16 : 0);
+     }
+     wined3d_mutex_unlock();
+ }
+@@ -187,7 +189,7 @@ static void STDMETHODCALLTYPE d3d11_immediate_context_VSSetConstantBuffers(ID3D1
+             iface, start_slot, buffer_count, buffers);
+ 
+     d3d11_immediate_context_set_constant_buffers(iface, WINED3D_SHADER_TYPE_VERTEX, start_slot,
+-            buffer_count, buffers);
++            buffer_count, buffers, NULL, NULL);
+ }
+ 
+ static void STDMETHODCALLTYPE d3d11_immediate_context_PSSetShaderResources(ID3D11DeviceContext1 *iface,
+@@ -339,7 +341,7 @@ static void STDMETHODCALLTYPE d3d11_immediate_context_PSSetConstantBuffers(ID3D1
+             iface, start_slot, buffer_count, buffers);
+ 
+     d3d11_immediate_context_set_constant_buffers(iface, WINED3D_SHADER_TYPE_PIXEL, start_slot,
+-            buffer_count, buffers);
++            buffer_count, buffers, NULL, NULL);
+ }
+ 
+ static void STDMETHODCALLTYPE d3d11_immediate_context_IASetInputLayout(ID3D11DeviceContext1 *iface,
+@@ -432,7 +434,7 @@ static void STDMETHODCALLTYPE d3d11_immediate_context_GSSetConstantBuffers(ID3D1
+             iface, start_slot, buffer_count, buffers);
+ 
+     d3d11_immediate_context_set_constant_buffers(iface, WINED3D_SHADER_TYPE_GEOMETRY, start_slot,
+-            buffer_count, buffers);
++            buffer_count, buffers, NULL, NULL);
+ }
+ 
+ static void STDMETHODCALLTYPE d3d11_immediate_context_GSSetShader(ID3D11DeviceContext1 *iface,
+@@ -1277,7 +1279,7 @@ static void STDMETHODCALLTYPE d3d11_immediate_context_HSSetConstantBuffers(ID3D1
+             iface, start_slot, buffer_count, buffers);
+ 
+     d3d11_immediate_context_set_constant_buffers(iface, WINED3D_SHADER_TYPE_HULL, start_slot,
+-            buffer_count, buffers);
++            buffer_count, buffers, NULL, NULL);
+ }
+ 
+ static void STDMETHODCALLTYPE d3d11_immediate_context_DSSetShaderResources(ID3D11DeviceContext1 *iface,
+@@ -1344,7 +1346,7 @@ static void STDMETHODCALLTYPE d3d11_immediate_context_DSSetConstantBuffers(ID3D1
+             iface, start_slot, buffer_count, buffers);
+ 
+     d3d11_immediate_context_set_constant_buffers(iface, WINED3D_SHADER_TYPE_DOMAIN, start_slot,
+-            buffer_count, buffers);
++            buffer_count, buffers, NULL, NULL);
+ }
+ 
+ static void STDMETHODCALLTYPE d3d11_immediate_context_CSSetShaderResources(ID3D11DeviceContext1 *iface,
+@@ -1431,7 +1433,7 @@ static void STDMETHODCALLTYPE d3d11_immediate_context_CSSetConstantBuffers(ID3D1
+             iface, start_slot, buffer_count, buffers);
+ 
+     d3d11_immediate_context_set_constant_buffers(iface, WINED3D_SHADER_TYPE_COMPUTE, start_slot,
+-            buffer_count, buffers);
++            buffer_count, buffers, NULL, NULL);
+ }
+ 
+ static void STDMETHODCALLTYPE d3d11_immediate_context_VSGetConstantBuffers(ID3D11DeviceContext1 *iface,
+@@ -2416,12 +2418,12 @@ static void STDMETHODCALLTYPE d3d11_immediate_context_ClearState(ID3D11DeviceCon
+     }
+     for (i = 0; i < D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT; ++i)
+     {
+-        wined3d_device_set_constant_buffer(device->wined3d_device, WINED3D_SHADER_TYPE_VERTEX, i, NULL);
+-        wined3d_device_set_constant_buffer(device->wined3d_device, WINED3D_SHADER_TYPE_HULL, i, NULL);
+-        wined3d_device_set_constant_buffer(device->wined3d_device, WINED3D_SHADER_TYPE_DOMAIN, i, NULL);
+-        wined3d_device_set_constant_buffer(device->wined3d_device, WINED3D_SHADER_TYPE_GEOMETRY, i, NULL);
+-        wined3d_device_set_constant_buffer(device->wined3d_device, WINED3D_SHADER_TYPE_PIXEL, i, NULL);
+-        wined3d_device_set_constant_buffer(device->wined3d_device, WINED3D_SHADER_TYPE_COMPUTE, i, NULL);
++        wined3d_device_set_constant_buffer(device->wined3d_device, WINED3D_SHADER_TYPE_VERTEX, i, NULL, 0, 0);
++        wined3d_device_set_constant_buffer(device->wined3d_device, WINED3D_SHADER_TYPE_HULL, i, NULL, 0, 0);
++        wined3d_device_set_constant_buffer(device->wined3d_device, WINED3D_SHADER_TYPE_DOMAIN, i, NULL, 0, 0);
++        wined3d_device_set_constant_buffer(device->wined3d_device, WINED3D_SHADER_TYPE_GEOMETRY, i, NULL, 0, 0);
++        wined3d_device_set_constant_buffer(device->wined3d_device, WINED3D_SHADER_TYPE_PIXEL, i, NULL, 0, 0);
++        wined3d_device_set_constant_buffer(device->wined3d_device, WINED3D_SHADER_TYPE_COMPUTE, i, NULL, 0, 0);
+     }
+     for (i = 0; i < D3D11_IA_VERTEX_INPUT_RESOURCE_SLOT_COUNT; ++i)
+     {
+@@ -3905,7 +3907,7 @@ static void d3d10_device_set_constant_buffers(ID3D10Device1 *iface,
+         struct d3d_buffer *buffer = unsafe_impl_from_ID3D10Buffer(buffers[i]);
+ 
+         wined3d_device_set_constant_buffer(device->wined3d_device, type, start_slot + i,
+-                buffer ? buffer->wined3d_buffer : NULL);
++                buffer ? buffer->wined3d_buffer : NULL, 0, 0);
+     }
+     wined3d_mutex_unlock();
+ }
+diff --git a/dlls/wined3d/cs.c b/dlls/wined3d/cs.c
+index 3f1ca8ce65..fdf6f66614 100644
+--- a/dlls/wined3d/cs.c
++++ b/dlls/wined3d/cs.c
+@@ -210,6 +210,8 @@ struct wined3d_cs_set_constant_buffer
+     enum wined3d_shader_type type;
+     UINT cb_idx;
+     struct wined3d_buffer *buffer;
++    UINT offset;
++    UINT size;
+ };
+ 
+ struct wined3d_cs_set_texture
+@@ -1236,6 +1238,8 @@ static void wined3d_cs_exec_set_constant_buffer(struct wined3d_cs *cs, const voi
+ 
+     prev = cs->state.cb[op->type][op->cb_idx];
+     cs->state.cb[op->type][op->cb_idx] = op->buffer;
++    cs->state.cb_offset[op->type][op->cb_idx] = op->offset;
++    cs->state.cb_size[op->type][op->cb_idx] = op->size;
+ 
+     if (op->buffer)
+         InterlockedIncrement(&op->buffer->resource.bind_count);
+@@ -1246,7 +1250,7 @@ static void wined3d_cs_exec_set_constant_buffer(struct wined3d_cs *cs, const voi
+ }
+ 
+ void wined3d_cs_emit_set_constant_buffer(struct wined3d_cs *cs, enum wined3d_shader_type type,
+-        UINT cb_idx, struct wined3d_buffer *buffer)
++        UINT cb_idx, struct wined3d_buffer *buffer, UINT offset, UINT size)
+ {
+     struct wined3d_cs_set_constant_buffer *op;
+ 
+@@ -1255,6 +1259,8 @@ void wined3d_cs_emit_set_constant_buffer(struct wined3d_cs *cs, enum wined3d_sha
+     op->type = type;
+     op->cb_idx = cb_idx;
+     op->buffer = buffer;
++    op->offset = offset;
++    op->size = size;
+ 
+     cs->ops->submit(cs, WINED3D_CS_QUEUE_DEFAULT);
+ }
+diff --git a/dlls/wined3d/device.c b/dlls/wined3d/device.c
+index a5801790dd..3a7b1b755f 100644
+--- a/dlls/wined3d/device.c
++++ b/dlls/wined3d/device.c
+@@ -2228,27 +2228,39 @@ struct wined3d_shader * CDECL wined3d_device_get_vertex_shader(const struct wine
+ }
+ 
+ void CDECL wined3d_device_set_constant_buffer(struct wined3d_device *device,
+-        enum wined3d_shader_type type, UINT idx, struct wined3d_buffer *buffer)
++        enum wined3d_shader_type type, UINT idx, struct wined3d_buffer *buffer,
++        UINT offset, UINT size)
+ {
+     struct wined3d_buffer *prev;
++    UINT prev_offset, prev_size;
+ 
+-    TRACE("device %p, type %#x, idx %u, buffer %p.\n", device, type, idx, buffer);
++    TRACE("device %p, type %#x, idx %u, buffer %p, offset %u, size %u.\n",
++            device, type, idx, buffer, offset, size);
+ 
+     if (idx >= MAX_CONSTANT_BUFFERS)
+     {
+         WARN("Invalid constant buffer index %u.\n", idx);
+         return;
+     }
++    if (size > MAX_IMMEDIATE_CONSTANT_BUFFER_SIZE*WINED3D_CONSTANT_BUFFER_ALIGNMENT)
++    {
++        WARN("Invalid constant slice size %u.\n", size);
++        return;
++    }
+ 
+     prev = device->update_state->cb[type][idx];
+-    if (buffer == prev)
++    prev_offset = device->update_state->cb_offset[type][idx];
++    prev_size = device->update_state->cb_size[type][idx];
++    if (buffer == prev && offset == prev_offset && size == prev_size)
+         return;
+ 
+     if (buffer)
+         wined3d_buffer_incref(buffer);
+     device->update_state->cb[type][idx] = buffer;
++    device->update_state->cb_offset[type][idx] = offset;
++    device->update_state->cb_size[type][idx] = size;
+     if (!device->recording)
+-        wined3d_cs_emit_set_constant_buffer(device->cs, type, idx, buffer);
++        wined3d_cs_emit_set_constant_buffer(device->cs, type, idx, buffer, offset, size);
+     if (prev)
+         wined3d_buffer_decref(prev);
+ }
+diff --git a/dlls/wined3d/state.c b/dlls/wined3d/state.c
+index 3b2f84538d..8bbd36ba75 100644
+--- a/dlls/wined3d/state.c
++++ b/dlls/wined3d/state.c
+@@ -4397,7 +4397,7 @@ static void state_cb(struct wined3d_context *context, const struct wined3d_state
+     const struct wined3d_gl_info *gl_info = context->gl_info;
+     enum wined3d_shader_type shader_type;
+     struct wined3d_buffer *buffer;
+-    unsigned int i, base, count;
++    unsigned int i, base, count, offset, size;
+ 
+     TRACE("context %p, state %p, state_id %#x.\n", context, state, state_id);
+ 
+@@ -4410,7 +4410,12 @@ static void state_cb(struct wined3d_context *context, const struct wined3d_state
+     for (i = 0; i < count; ++i)
+     {
+         buffer = state->cb[shader_type][i];
+-        GL_EXTCALL(glBindBufferBase(GL_UNIFORM_BUFFER, base + i, buffer ? buffer->buffer_object : 0));
++        offset = state->cb_offset[shader_type][i];
++        size = state->cb_size[shader_type][i];
++        if (size)
++            GL_EXTCALL(glBindBufferRange(GL_UNIFORM_BUFFER, base + i, buffer ? buffer->buffer_object : 0, offset, size));
++        else
++            GL_EXTCALL(glBindBufferBase(GL_UNIFORM_BUFFER, base + i, buffer ? buffer->buffer_object : 0));
+     }
+     checkGLcall("bind constant buffers");
+ }
+diff --git a/dlls/wined3d/wined3d.spec b/dlls/wined3d/wined3d.spec
+index 93cecf0d3b..3cff133e64 100644
+--- a/dlls/wined3d/wined3d.spec
++++ b/dlls/wined3d/wined3d.spec
+@@ -132,7 +132,7 @@
+ @ cdecl wined3d_device_set_clip_plane(ptr long ptr)
+ @ cdecl wined3d_device_set_clip_status(ptr ptr)
+ @ cdecl wined3d_device_set_compute_shader(ptr ptr)
+-@ cdecl wined3d_device_set_constant_buffer(ptr long long ptr)
++@ cdecl wined3d_device_set_constant_buffer(ptr long long ptr long long)
+ @ cdecl wined3d_device_set_cs_resource_view(ptr long ptr)
+ @ cdecl wined3d_device_set_cs_sampler(ptr long ptr)
+ @ cdecl wined3d_device_set_cs_uav(ptr long ptr long)
+diff --git a/dlls/wined3d/wined3d_private.h b/dlls/wined3d/wined3d_private.h
+index c30bb139d3..90e69168ff 100644
+--- a/dlls/wined3d/wined3d_private.h
++++ b/dlls/wined3d/wined3d_private.h
+@@ -2845,6 +2845,8 @@ struct wined3d_state
+ 
+     struct wined3d_shader *shader[WINED3D_SHADER_TYPE_COUNT];
+     struct wined3d_buffer *cb[WINED3D_SHADER_TYPE_COUNT][MAX_CONSTANT_BUFFERS];
++    UINT cb_offset[WINED3D_SHADER_TYPE_COUNT][MAX_CONSTANT_BUFFERS];
++    UINT cb_size[WINED3D_SHADER_TYPE_COUNT][MAX_CONSTANT_BUFFERS];
+     struct wined3d_sampler *sampler[WINED3D_SHADER_TYPE_COUNT][MAX_SAMPLER_OBJECTS];
+     struct wined3d_shader_resource_view *shader_resource_view[WINED3D_SHADER_TYPE_COUNT][MAX_SHADER_RESOURCE_VIEWS];
+     struct wined3d_unordered_access_view *unordered_access_view[WINED3D_PIPELINE_COUNT][MAX_UNORDERED_ACCESS_VIEWS];
+@@ -3582,7 +3584,7 @@ void wined3d_cs_emit_set_clip_plane(struct wined3d_cs *cs, UINT plane_idx,
+ void wined3d_cs_emit_set_color_key(struct wined3d_cs *cs, struct wined3d_texture *texture,
+         WORD flags, const struct wined3d_color_key *color_key) DECLSPEC_HIDDEN;
+ void wined3d_cs_emit_set_constant_buffer(struct wined3d_cs *cs, enum wined3d_shader_type type,
+-        UINT cb_idx, struct wined3d_buffer *buffer) DECLSPEC_HIDDEN;
++        UINT cb_idx, struct wined3d_buffer *buffer, UINT offset, UINT size) DECLSPEC_HIDDEN;
+ void wined3d_cs_emit_set_depth_stencil_view(struct wined3d_cs *cs,
+         struct wined3d_rendertarget_view *view) DECLSPEC_HIDDEN;
+ void wined3d_cs_emit_set_index_buffer(struct wined3d_cs *cs, struct wined3d_buffer *buffer,
+diff --git a/include/wine/wined3d.h b/include/wine/wined3d.h
+index 5f54826b56..a370cd82bc 100644
+--- a/include/wine/wined3d.h
++++ b/include/wine/wined3d.h
+@@ -2376,7 +2376,7 @@ HRESULT __cdecl wined3d_device_set_clip_status(struct wined3d_device *device,
+         const struct wined3d_clip_status *clip_status);
+ void __cdecl wined3d_device_set_compute_shader(struct wined3d_device *device, struct wined3d_shader *shader);
+ void __cdecl wined3d_device_set_constant_buffer(struct wined3d_device *device, enum wined3d_shader_type type, UINT idx,
+-        struct wined3d_buffer *buffer);
++        struct wined3d_buffer *buffer, UINT offset, UINT size);
+ void __cdecl wined3d_device_set_cs_resource_view(struct wined3d_device *device,
+         unsigned int idx, struct wined3d_shader_resource_view *view);
+ void __cdecl wined3d_device_set_cs_sampler(struct wined3d_device *device,
+-- 
+2.14.1
+

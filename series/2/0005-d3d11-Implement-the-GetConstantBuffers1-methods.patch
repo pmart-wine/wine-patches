@@ -1,0 +1,85 @@
+From d1f7d36c47fd8353256d3dce5084566ddf8cb8d1 Mon Sep 17 00:00:00 2001
+From: Pablo Martin <pmartXXXXXX>
+Date: Sun, 27 May 2018 10:04:25 +0200
+Subject: [PATCH 5/5] d3d11: Implement the GetConstantBuffers1 methods.
+
+Signed-off-by: Pablo Martin <pmartXXXXX>
+---
+ dlls/d3d11/device.c | 30 ++++++++++++++++++++++++------
+ 1 file changed, 24 insertions(+), 6 deletions(-)
+
+diff --git a/dlls/d3d11/device.c b/dlls/d3d11/device.c
+index 1a8ecfa445..a74c16c282 100644
+--- a/dlls/d3d11/device.c
++++ b/dlls/d3d11/device.c
+@@ -2615,43 +2615,61 @@ static void STDMETHODCALLTYPE d3d11_immediate_context_CSSetConstantBuffers1(ID3D
+ static void STDMETHODCALLTYPE d3d11_immediate_context_VSGetConstantBuffers1(ID3D11DeviceContext1 *iface,
+         UINT start_slot, UINT buffer_count, ID3D11Buffer **buffers, UINT *first_constant, UINT *num_constants)
+ {
+-    FIXME("iface %p, start_slot %u, buffer_count %u, buffers %p, first_constant %p, num_constants %p stub!\n",
++    TRACE("iface %p, start_slot %u, buffer_count %u, buffers %p, first_constant %p, first_constant %p.\n",
+             iface, start_slot, buffer_count, buffers, first_constant, num_constants);
++
++    d3d11_immediate_context_get_constant_buffers(iface, WINED3D_SHADER_TYPE_VERTEX, start_slot,
++            buffer_count, buffers, first_constant, num_constants);
+ }
+ 
+ static void STDMETHODCALLTYPE d3d11_immediate_context_HSGetConstantBuffers1(ID3D11DeviceContext1 *iface,
+         UINT start_slot, UINT buffer_count, ID3D11Buffer **buffers, UINT *first_constant, UINT *num_constants)
+ {
+-    FIXME("iface %p, start_slot %u, buffer_count %u, buffers %p, first_constant %p, num_constants %p stub!\n",
++    TRACE("iface %p, start_slot %u, buffer_count %u, buffers %p, first_constant %p, num_constants %p.\n",
+             iface, start_slot, buffer_count, buffers, first_constant, num_constants);
++
++    d3d11_immediate_context_get_constant_buffers(iface, WINED3D_SHADER_TYPE_HULL, start_slot,
++            buffer_count, buffers, first_constant, num_constants);
+ }
+ 
+ static void STDMETHODCALLTYPE d3d11_immediate_context_DSGetConstantBuffers1(ID3D11DeviceContext1 *iface,
+         UINT start_slot, UINT buffer_count, ID3D11Buffer **buffers, UINT *first_constant, UINT *num_constants)
+ {
+-    FIXME("iface %p, start_slot %u, buffer_count %u, buffers %p, first_constant %p, num_constants %p stub!\n",
++    TRACE("iface %p, start_slot %u, buffer_count %u, buffers %p, first_constant %p, num_constants %p.\n",
+             iface, start_slot, buffer_count, buffers, first_constant, num_constants);
++
++    d3d11_immediate_context_get_constant_buffers(iface, WINED3D_SHADER_TYPE_DOMAIN, start_slot,
++            buffer_count, buffers, first_constant, num_constants);
+ }
+ 
+ static void STDMETHODCALLTYPE d3d11_immediate_context_GSGetConstantBuffers1(ID3D11DeviceContext1 *iface,
+         UINT start_slot, UINT buffer_count, ID3D11Buffer **buffers, UINT *first_constant, UINT *num_constants)
+ {
+-    FIXME("iface %p, start_slot %u, buffer_count %u, buffers %p, first_constant %p, num_constants %p stub!\n",
++    TRACE("iface %p, start_slot %u, buffer_count %u, buffers %p, first_constant %p, num_constants %p.\n",
+             iface, start_slot, buffer_count, buffers, first_constant, num_constants);
++
++    d3d11_immediate_context_get_constant_buffers(iface, WINED3D_SHADER_TYPE_GEOMETRY, start_slot,
++            buffer_count, buffers, first_constant, num_constants);
+ }
+ 
+ static void STDMETHODCALLTYPE d3d11_immediate_context_PSGetConstantBuffers1(ID3D11DeviceContext1 *iface,
+         UINT start_slot, UINT buffer_count, ID3D11Buffer **buffers, UINT *first_constant, UINT *num_constants)
+ {
+-    FIXME("iface %p, start_slot %u, buffer_count %u, buffers %p, first_constant %p, num_constants %p stub!\n",
++    TRACE("iface %p, start_slot %u, buffer_count %u, buffers %p, first_constant %p, num_constants %p.\n",
+             iface, start_slot, buffer_count, buffers, first_constant, num_constants);
++
++    d3d11_immediate_context_get_constant_buffers(iface, WINED3D_SHADER_TYPE_PIXEL, start_slot,
++            buffer_count, buffers, first_constant, num_constants);
+ }
+ 
+ static void STDMETHODCALLTYPE d3d11_immediate_context_CSGetConstantBuffers1(ID3D11DeviceContext1 *iface,
+         UINT start_slot, UINT buffer_count, ID3D11Buffer **buffers, UINT *first_constant, UINT *num_constants)
+ {
+-    FIXME("iface %p, start_slot %u, buffer_count %u, buffers %p, first_constant %p, num_constants %p stub!\n",
++    TRACE("iface %p, start_slot %u, buffer_count %u, buffers %p, first_constant %p, num_constants %p.\n",
+             iface, start_slot, buffer_count, buffers, first_constant, num_constants);
++
++    d3d11_immediate_context_get_constant_buffers(iface, WINED3D_SHADER_TYPE_COMPUTE, start_slot,
++            buffer_count, buffers, first_constant, num_constants);
+ }
+ 
+ static void STDMETHODCALLTYPE d3d11_immediate_context_SwapDeviceContextState(ID3D11DeviceContext1 *iface,
+-- 
+2.14.1
+
