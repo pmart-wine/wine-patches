@@ -17,18 +17,18 @@ Here goes a small explanation of each patch role in this series:
 0001. To implement the helper method, it is needed to directly call the wined3d
       constant_buffer methods directly, instead of relying on the intermediate
       methods, so the first step here is exposing those and the associated enum.
-000[23]. Here I am implementing the actual helper methods for d3d11, this is
-         what I need for the next series.
+000[23]. Implements the actual helper methods for d3d11, this is what is need
+         for the next series.
 
-Now, the rest of the series is just continuing the refactor until the specific
+The rest of the series is just continuing the refactor until the specific
 methods can be completely removed and we make good use of the newly exposed
 generic methods everywhere. I don't really need these for the next series, but
 I think it makes sense.
 
 000[4-5]. Helper methods for d3d10 similar to the ones from 2 and 3.
 0006. Also call the generic buffer methods from wined3d directly from SetState
-      so now they have no users.
-0007: Since the specific methods have no more users, now we could remove them.
+      leaving no more users.
+0007: Since the specific methods have no more users, they can be removed.
 0008: Now it's sensible to add a trace to the generic methods, since the
       specific ones are not used any more and where the ones doing the tracing
       at wined3d level.
@@ -36,8 +36,7 @@ I think it makes sense.
 A similar refactoring can be done later for XX[SG]etShaderResources and
 XX[SG]etShaderSamplers methods reducing a bit of duplicate code and also
 removing even more specific methods from wined3d. Also note how then ClearState
-will have just one loop over SHADER_TYPES making the whole thing pretty rounded
-up.
+will have just one loop over SHADER_TYPES in the end.
 
  dlls/wined3d/device.c          |  4 ++--
  dlls/wined3d/wined3d.spec      |  2 ++
