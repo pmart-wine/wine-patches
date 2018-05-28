@@ -27,7 +27,7 @@ index d231284db3..6911333d22 100644
          wined3d_device_set_cs_resource_view(device->wined3d_device, i, NULL);
      }
 -    for (i = 0; i < D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT; ++i)
-+    for (j = 0; i < WINED3D_SHADER_TYPE_COUNT; ++j)
++    for (j = 0; j < WINED3D_SHADER_TYPE_COUNT; ++j)
      {
 -        wined3d_device_set_vs_cb(device->wined3d_device, i, NULL);
 -        wined3d_device_set_hs_cb(device->wined3d_device, i, NULL);
