@@ -1,7 +1,7 @@
 From b37c1fbfb4794388efd665d406864e05c4fbfa67 Mon Sep 17 00:00:00 2001
 From: Pablo Martin <pmartXXXXXXXX>
 Date: Sun, 27 May 2018 07:41:55 +0200
-Subject: [PATCH 1/7] wined3d: Expose wined3d_shader_type enum and
+Subject: [PATCH 1/6] wined3d: Expose wined3d_shader_type enum and
  wined3d_device_*_constant_buffer methods.
 
 Signed-off-by: Pablo Martin <pmartXXXXXXXX>
@@ -14,12 +14,12 @@ that with the next series would become even more duplicated.
 
 Here goes a small explanation of each patch role in this series:
 
-0001. To implement the helper method, it is needed to directly call the wined3d
+0001: To implement the helper method, it is needed to directly call the wined3d
       constant_buffer methods directly, instead of relying on the intermediate
       methods, so the first step here is exposing those and the associated enum.
       Also adds new trace in the methods since now only the intermediate ones
       are tracing.
-000[23]. Implements the actual helper methods for d3d11, this is what is need
+000[23]: Implements the actual helper methods for d3d11, this is what is need
          for the next series.
 
 The rest of the series is just continuing the refactor until the specific
@@ -27,10 +27,8 @@ methods can be completely removed and we make good use of the newly exposed
 generic methods everywhere. I don't really need these for the next series, but
 I think it makes sense.
 
-000[4-5]. Helper methods for d3d10 similar to the ones from 2 and 3.
-0006. Also call the generic buffer methods from wined3d directly from SetState
-      leaving no more users.
-0007: Since the specific methods have no more users, they can be removed.
+000[45]: Helper methods for d3d10 similar to the ones from 2 and 3.
+0006: Remove the specific methods and all remaining users (just ClearState).
 
 A similar refactoring can be done later for XX[SG]etShaderResources and
 XX[SG]etShaderSamplers methods reducing a bit of duplicate code and also

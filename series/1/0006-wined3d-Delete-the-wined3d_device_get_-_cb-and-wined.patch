@@ -1,21 +1,53 @@
-From 39e7f339d4342bac10a1400b5f296eecbc2ffc7c Mon Sep 17 00:00:00 2001
-From: Pablo Martin <pmartXXXXXXXX>
-Date: Sun, 27 May 2018 08:36:17 +0200
-Subject: [PATCH 7/7] wined3d: Delete the wined3d_device_get_*_cb and
+From 5a8b4f0363075b2681d5dcea473e79440454a6d2 Mon Sep 17 00:00:00 2001
+From: Pablo Martin <pmartXXXXXX>
+Date: Mon, 28 May 2018 18:31:28 +0200
+Subject: [PATCH 6/6] wined3d: Remove the wined3d_device_get_*_cb and
  wined3d_device_set_*_cb methods.
 
-Signed-off-by: Pablo Martin <pmartXXXXXXXX>
+Signed-off-by: Pablo Martin <pmartXXXXXXX>
 ---
+ dlls/d3d11/device.c       | 12 +++----
  dlls/wined3d/device.c     | 84 -----------------------------------------------
  dlls/wined3d/wined3d.spec | 12 -------
  include/wine/wined3d.h    | 12 -------
- 3 files changed, 108 deletions(-)
+ 4 files changed, 4 insertions(+), 116 deletions(-)
 
+diff --git a/dlls/d3d11/device.c b/dlls/d3d11/device.c
+index d231284db3..d75ebcfe3c 100644
+--- a/dlls/d3d11/device.c
++++ b/dlls/d3d11/device.c
+@@ -2385,7 +2385,7 @@ static void STDMETHODCALLTYPE d3d11_immediate_context_ClearState(ID3D11DeviceCon
+ {
+     struct d3d_device *device = device_from_immediate_ID3D11DeviceContext1(iface);
+     static const float blend_factor[] = {1.0f, 1.0f, 1.0f, 1.0f};
+-    unsigned int i;
++    unsigned int i, j;
+ 
+     TRACE("iface %p.\n", iface);
+ 
+@@ -2414,14 +2414,10 @@ static void STDMETHODCALLTYPE d3d11_immediate_context_ClearState(ID3D11DeviceCon
+         wined3d_device_set_ps_resource_view(device->wined3d_device, i, NULL);
+         wined3d_device_set_cs_resource_view(device->wined3d_device, i, NULL);
+     }
+-    for (i = 0; i < D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT; ++i)
++    for (j = 0; j < WINED3D_SHADER_TYPE_COUNT; ++j)
+     {
+-        wined3d_device_set_vs_cb(device->wined3d_device, i, NULL);
+-        wined3d_device_set_hs_cb(device->wined3d_device, i, NULL);
+-        wined3d_device_set_ds_cb(device->wined3d_device, i, NULL);
+-        wined3d_device_set_gs_cb(device->wined3d_device, i, NULL);
+-        wined3d_device_set_ps_cb(device->wined3d_device, i, NULL);
+-        wined3d_device_set_cs_cb(device->wined3d_device, i, NULL);
++        for (i = 0; i < D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT; ++i)
++            wined3d_device_set_constant_buffer(device->wined3d_device, j, i, NULL);
+     }
+     for (i = 0; i < D3D11_IA_VERTEX_INPUT_RESOURCE_SLOT_COUNT; ++i)
+     {
 diff --git a/dlls/wined3d/device.c b/dlls/wined3d/device.c
-index f7866ab507..dbcd039d90 100644
+index 6fdef450c3..899ec3343a 100644
 --- a/dlls/wined3d/device.c
 +++ b/dlls/wined3d/device.c
-@@ -2251,13 +2251,6 @@ void CDECL wined3d_device_set_constant_buffer(struct wined3d_device *device,
+@@ -2253,13 +2253,6 @@ void CDECL wined3d_device_set_constant_buffer(struct wined3d_device *device,
          wined3d_buffer_decref(prev);
  }
  
@@ -29,7 +61,7 @@ index f7866ab507..dbcd039d90 100644
  struct wined3d_buffer * CDECL wined3d_device_get_constant_buffer(const struct wined3d_device *device,
          enum wined3d_shader_type shader_type, unsigned int idx)
  {
-@@ -2270,13 +2263,6 @@ struct wined3d_buffer * CDECL wined3d_device_get_constant_buffer(const struct wi
+@@ -2274,13 +2267,6 @@ struct wined3d_buffer * CDECL wined3d_device_get_constant_buffer(const struct wi
      return device->state.cb[shader_type][idx];
  }
  
@@ -43,7 +75,7 @@ index f7866ab507..dbcd039d90 100644
  static void wined3d_device_set_shader_resource_view(struct wined3d_device *device,
          enum wined3d_shader_type type, UINT idx, struct wined3d_shader_resource_view *view)
  {
-@@ -2550,20 +2536,6 @@ struct wined3d_shader * CDECL wined3d_device_get_pixel_shader(const struct wined
+@@ -2554,20 +2540,6 @@ struct wined3d_shader * CDECL wined3d_device_get_pixel_shader(const struct wined
      return device->state.shader[WINED3D_SHADER_TYPE_PIXEL];
  }
  
@@ -64,7 +96,7 @@ index f7866ab507..dbcd039d90 100644
  void CDECL wined3d_device_set_ps_resource_view(struct wined3d_device *device,
          UINT idx, struct wined3d_shader_resource_view *view)
  {
-@@ -2762,20 +2734,6 @@ struct wined3d_shader * CDECL wined3d_device_get_hull_shader(const struct wined3
+@@ -2766,20 +2738,6 @@ struct wined3d_shader * CDECL wined3d_device_get_hull_shader(const struct wined3
      return device->state.shader[WINED3D_SHADER_TYPE_HULL];
  }
  
@@ -85,7 +117,7 @@ index f7866ab507..dbcd039d90 100644
  void CDECL wined3d_device_set_hs_resource_view(struct wined3d_device *device,
          unsigned int idx, struct wined3d_shader_resource_view *view)
  {
-@@ -2831,20 +2789,6 @@ struct wined3d_shader * CDECL wined3d_device_get_domain_shader(const struct wine
+@@ -2835,20 +2793,6 @@ struct wined3d_shader * CDECL wined3d_device_get_domain_shader(const struct wine
      return device->state.shader[WINED3D_SHADER_TYPE_DOMAIN];
  }
  
@@ -106,7 +138,7 @@ index f7866ab507..dbcd039d90 100644
  void CDECL wined3d_device_set_ds_resource_view(struct wined3d_device *device,
          unsigned int idx, struct wined3d_shader_resource_view *view)
  {
-@@ -2899,20 +2843,6 @@ struct wined3d_shader * CDECL wined3d_device_get_geometry_shader(const struct wi
+@@ -2903,20 +2847,6 @@ struct wined3d_shader * CDECL wined3d_device_get_geometry_shader(const struct wi
      return device->state.shader[WINED3D_SHADER_TYPE_GEOMETRY];
  }
  
@@ -127,7 +159,7 @@ index f7866ab507..dbcd039d90 100644
  void CDECL wined3d_device_set_gs_resource_view(struct wined3d_device *device,
          UINT idx, struct wined3d_shader_resource_view *view)
  {
-@@ -2967,20 +2897,6 @@ struct wined3d_shader * CDECL wined3d_device_get_compute_shader(const struct win
+@@ -2971,20 +2901,6 @@ struct wined3d_shader * CDECL wined3d_device_get_compute_shader(const struct win
      return device->state.shader[WINED3D_SHADER_TYPE_COMPUTE];
  }
  
