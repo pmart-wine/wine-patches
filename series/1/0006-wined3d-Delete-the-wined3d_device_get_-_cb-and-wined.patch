@@ -30,7 +30,7 @@ index d231284db3..d75ebcfe3c 100644
          wined3d_device_set_cs_resource_view(device->wined3d_device, i, NULL);
      }
 -    for (i = 0; i < D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT; ++i)
-+    for (j = 0; j < WINED3D_SHADER_TYPE_COUNT; ++j)
++    for (i = 0; i < WINED3D_SHADER_TYPE_COUNT; ++i)
      {
 -        wined3d_device_set_vs_cb(device->wined3d_device, i, NULL);
 -        wined3d_device_set_hs_cb(device->wined3d_device, i, NULL);
@@ -38,8 +38,8 @@ index d231284db3..d75ebcfe3c 100644
 -        wined3d_device_set_gs_cb(device->wined3d_device, i, NULL);
 -        wined3d_device_set_ps_cb(device->wined3d_device, i, NULL);
 -        wined3d_device_set_cs_cb(device->wined3d_device, i, NULL);
-+        for (i = 0; i < D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT; ++i)
-+            wined3d_device_set_constant_buffer(device->wined3d_device, j, i, NULL);
++        for (j = 0; j < D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT; ++j)
++            wined3d_device_set_constant_buffer(device->wined3d_device, i, j, NULL);
      }
      for (i = 0; i < D3D11_IA_VERTEX_INPUT_RESOURCE_SLOT_COUNT; ++i)
      {
