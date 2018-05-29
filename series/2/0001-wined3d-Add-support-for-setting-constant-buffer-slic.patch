@@ -93,11 +93,11 @@ index d75ebcfe3c..51c236ef39 100644
  
  static void STDMETHODCALLTYPE d3d11_immediate_context_VSGetConstantBuffers(ID3D11DeviceContext1 *iface,
 @@ -2417,7 +2419,7 @@ static void STDMETHODCALLTYPE d3d11_immediate_context_ClearState(ID3D11DeviceCon
-     for (j = 0; j < WINED3D_SHADER_TYPE_COUNT; ++j)
+     for (i = 0; i < WINED3D_SHADER_TYPE_COUNT; ++i)
      {
-         for (i = 0; i < D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT; ++i)
--            wined3d_device_set_constant_buffer(device->wined3d_device, j, i, NULL);
-+            wined3d_device_set_constant_buffer(device->wined3d_device, j, i, NULL, 0, 0);
+         for (j = 0; j < D3D11_COMMONSHADER_CONSTANT_BUFFER_API_SLOT_COUNT; ++j)
+-            wined3d_device_set_constant_buffer(device->wined3d_device, i, j, NULL);
++            wined3d_device_set_constant_buffer(device->wined3d_device, i, j, NULL, 0, 0);
      }
      for (i = 0; i < D3D11_IA_VERTEX_INPUT_RESOURCE_SLOT_COUNT; ++i)
      {
