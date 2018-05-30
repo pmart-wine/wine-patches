@@ -1,18 +1,18 @@
-From d1f7d36c47fd8353256d3dce5084566ddf8cb8d1 Mon Sep 17 00:00:00 2001
-From: Pablo Martin <pmartXXXXXX>
+From 24ce67feffda8a75f5f6d4bd986f84125250ba5c Mon Sep 17 00:00:00 2001
+From: Pablo Martin <pmartXXXXXXX>
 Date: Sun, 27 May 2018 10:04:25 +0200
 Subject: [PATCH 5/5] d3d11: Implement the GetConstantBuffers1 methods.
 
-Signed-off-by: Pablo Martin <pmartXXXXX>
+Signed-off-by: Pablo Martin <pmartXXXXXXXXX>
 ---
  dlls/d3d11/device.c | 30 ++++++++++++++++++++++++------
  1 file changed, 24 insertions(+), 6 deletions(-)
 
 diff --git a/dlls/d3d11/device.c b/dlls/d3d11/device.c
-index 1a8ecfa445..a74c16c282 100644
+index ecf0e83f78..c4c7865e39 100644
 --- a/dlls/d3d11/device.c
 +++ b/dlls/d3d11/device.c
-@@ -2615,43 +2615,61 @@ static void STDMETHODCALLTYPE d3d11_immediate_context_CSSetConstantBuffers1(ID3D
+@@ -2612,43 +2612,61 @@ static void STDMETHODCALLTYPE d3d11_immediate_context_CSSetConstantBuffers1(ID3D
  static void STDMETHODCALLTYPE d3d11_immediate_context_VSGetConstantBuffers1(ID3D11DeviceContext1 *iface,
          UINT start_slot, UINT buffer_count, ID3D11Buffer **buffers, UINT *first_constant, UINT *num_constants)
  {

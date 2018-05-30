@@ -1,18 +1,18 @@
-From 072a2c4484fe277769cff68aa58ac966fe02ada9 Mon Sep 17 00:00:00 2001
-From: Pablo Martin <pmartXXXXXXXX>
-Date: Mon, 28 May 2018 04:20:50 +0200
+From 9188962fadffc0354dd0a3aa12836e1d03edac7c Mon Sep 17 00:00:00 2001
+From: Pablo Martin <pmartXXXXXXX>
+Date: Wed, 30 May 2018 11:56:29 +0200
 Subject: [PATCH 3/5] d3d11/tests: Add tests for constant buffer offsetting.
 
-Signed-off-by: Pablo Martin <pmartXXXXXXXX>
+Signed-off-by: Pablo Martin <pmartXXXXXXXXX>
 ---
- dlls/d3d11/tests/d3d11.c | 322 +++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 322 insertions(+)
+ dlls/d3d11/tests/d3d11.c | 352 +++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 352 insertions(+)
 
 diff --git a/dlls/d3d11/tests/d3d11.c b/dlls/d3d11/tests/d3d11.c
-index f6f4fe3a55..d43a1b1248 100644
+index 1043722eb5..0c4e3dc020 100644
 --- a/dlls/d3d11/tests/d3d11.c
 +++ b/dlls/d3d11/tests/d3d11.c
-@@ -11262,6 +11262,327 @@ static void test_fragment_coords(void)
+@@ -11329,6 +11329,357 @@ static void test_fragment_coords(void)
      release_test_context(&test_context);
  }
  
@@ -168,11 +168,24 @@ index f6f4fe3a55..d43a1b1248 100644
 +    color = get_texture_color(test_context.backbuffer, 319, 240);
 +    ok(compare_color(color, 0xffff0000, 1), "Got unexpected color 0x%08x.\n", color);
 +
++    /* Set through context and get through context1 */
++    ID3D11DeviceContext_PSSetConstantBuffers(context, 0, 1, &ps_cb);
++
++    ID3D11DeviceContext1_PSGetConstantBuffers1(context1, 0, 1, &ps_cb_result, &offset_result, &size_result);
++    ok(offset_result == 0 && size_result == 4096, "Got unexpected offset and size, %u %u.\n", offset_result, size_result);
++    if (ps_cb_result)
++        ID3D11Buffer_Release(ps_cb_result);
++
++    draw_quad(&test_context);
++
++    color = get_texture_color(test_context.backbuffer, 14, 14);
++    ok(compare_color(color, 0xffffff00, 1), "Got unexpected color 0x%08x.\n", color);
++
 +    /* NULL offset and size */
 +    ID3D11DeviceContext1_PSSetConstantBuffers1(context1, 0, 1, &ps_cb, NULL, NULL);
 +
 +    ID3D11DeviceContext1_PSGetConstantBuffers1(context1, 0, 1, &ps_cb_result, &offset_result, &size_result);
-+    todo_wine ok(offset_result == 0 && size_result == 4096, "Got unexpected offset and size, %u %u.\n", offset_result, size_result);
++    ok(offset_result == 0 && size_result == 4096, "Got unexpected offset and size, %u %u.\n", offset_result, size_result);
 +    if (ps_cb_result)
 +        ID3D11Buffer_Release(ps_cb_result);
 +
@@ -200,7 +213,7 @@ index f6f4fe3a55..d43a1b1248 100644
 +    ID3D11DeviceContext1_PSSetConstantBuffers1(context1, 0, 1, &ps_cb, offset, size);
 +
 +    ID3D11DeviceContext1_PSGetConstantBuffers1(context1, 0, 1, &ps_cb_result, &offset_result, &size_result);
-+    todo_wine ok(offset_result == 16 && size_result == 16, "Got unexpected offset and size, %u %u.\n", offset_result, size_result);
++    ok(offset_result == 16 && size_result == 16, "Got unexpected offset and size, %u %u.\n", offset_result, size_result);
 +    if (ps_cb_result)
 +        ID3D11Buffer_Release(ps_cb_result);
 +
@@ -217,7 +230,7 @@ index f6f4fe3a55..d43a1b1248 100644
 +    ID3D11DeviceContext1_PSSetConstantBuffers1(context1, 0, 1, &ps_cb, offset, size);
 +
 +    ID3D11DeviceContext1_PSGetConstantBuffers1(context1, 0, 1, &ps_cb_result, &offset_result, &size_result);
-+    todo_wine ok(offset_result == 16 && size_result == 16, "Got unexpected offset and size, %u %u.\n", offset_result, size_result);
++    ok(offset_result == 16 && size_result == 16, "Got unexpected offset and size, %u %u.\n", offset_result, size_result);
 +    if (ps_cb_result)
 +        ID3D11Buffer_Release(ps_cb_result);
 +
@@ -329,6 +342,23 @@ index f6f4fe3a55..d43a1b1248 100644
 +    color = get_texture_color(test_context.backbuffer, 320, 239);
 +    ok(compare_color(color, 0xff00ff00, 1), "Got unexpected color 0x%08x.\n", color);
 +
++    /* set both to 0 */
++    offset[0] = 0;
++    size[0] = 0;
++    offset_result = 1;
++    size_result = 1;
++    ID3D11DeviceContext1_PSSetConstantBuffers1(context1, 0, 1, &ps_cb, offset, size);
++
++    ID3D11DeviceContext1_PSGetConstantBuffers1(context1, 0, 1, &ps_cb_result, &offset_result, &size_result);
++    ok(offset_result == 0 && size_result == 0, "Got unexpected offset and size, %u %u.\n", offset_result, size_result);
++    if (ps_cb_result)
++        ID3D11Buffer_Release(ps_cb_result);
++
++    draw_quad(&test_context);
++
++    color = get_texture_color(test_context.backbuffer, 14, 14);
++    ok(compare_color(color, 0xffffff00, 1), "Got unexpected color 0x%08x.\n", color);
++
 +    /* clean up */
 +    ID3D11Buffer_Release(ps_cb);
 +    ID3D11DeviceContext1_Release(context1);
@@ -340,7 +370,7 @@ index f6f4fe3a55..d43a1b1248 100644
  static void test_update_subresource(void)
  {
      struct d3d11_test_context test_context;
-@@ -27428,6 +27749,7 @@ START_TEST(d3d11)
+@@ -27560,6 +27911,7 @@ START_TEST(d3d11)
      run_for_each_feature_level(test_device_interfaces);
      test_get_immediate_context();
      test_create_texture1d();
