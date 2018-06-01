@@ -5,6 +5,17 @@ Subject: [PATCH 1/5] wined3d: Add support for setting constant buffer slices.
 
 Signed-off-by: Pablo Martin <pmartXXXXXXXXX>
 ---
+Remarks:
+
+- d3d11 is using constants as slice parameters, while wined3d is using bytes, this requires a correction factor of 16 since each constant is 16 bytes (4x32 bit components each):
+  - would it be better to make wined3d also use constants?
+  - is sizeof(struct wined3d_vec4) the best way to apply the correction? Should we introduce a constant to refer to this?
+- Regarding naming, would 'slice' or 'range' better fit to referring to the offset+size mechanic?
+- There are two test failing atm on wine, the ones setting NULL size and offset (either explicitly or because of using the old SetConstantBuffer method).
+  - Should this undocumented behaviour be implemented?
+- Offset and size parameters should be set in multiples of 16 constants.
+  - Atm I'm checking against '& 0xff'. Should a constant be introduced here?
+
  dlls/d3d11/device.c            | 24 ++++++++++++++----------
  dlls/wined3d/cs.c              |  8 +++++++-
  dlls/wined3d/device.c          | 25 +++++++++++++++++++++----
@@ -181,12 +192,12 @@ index 8ef74b6ef0..9993b95cd2 100644
      }
 +    if (offset & 0xff || size & 0xff)
 +    {
-+        WARN("Invalid offset or size value %u %u.\n", offset, size);
++        WARN("Offset and size must be multiples of 16 %u %u.\n", offset, size);
 +        return;
 +    }
 +    if (size > MAX_IMMEDIATE_CONSTANT_BUFFER_SIZE*sizeof(struct wined3d_vec4))
 +    {
-+        WARN("Invalid constant slice size %u.\n", size);
++        WARN("Size value too big %u.\n", size);
 +        return;
 +    }
  
