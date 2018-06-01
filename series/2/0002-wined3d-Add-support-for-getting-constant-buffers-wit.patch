@@ -1,4 +1,4 @@
-From 33c1b7952e82c249bb5c23d86245ccebfcee05d7 Mon Sep 17 00:00:00 2001
+From 00c8a124d609ea47913a392ebfb834c482056d78 Mon Sep 17 00:00:00 2001
 From: Pablo Martin <pmartXXXXXXX>
 Date: Sun, 27 May 2018 09:49:34 +0200
 Subject: [PATCH 2/5] wined3d: Add support for getting constant buffers with
@@ -13,7 +13,7 @@ Signed-off-by: Pablo Martin <pmartXXXXXXXXX>
  4 files changed, 25 insertions(+), 13 deletions(-)
 
 diff --git a/dlls/d3d11/device.c b/dlls/d3d11/device.c
-index 8ce5d60ea0..65f3475ef6 100644
+index 64a9b98477..6170a74da7 100644
 --- a/dlls/d3d11/device.c
 +++ b/dlls/d3d11/device.c
 @@ -98,7 +98,8 @@ static ULONG STDMETHODCALLTYPE d3d11_immediate_context_Release(ID3D11DeviceConte
@@ -39,13 +39,13 @@ index 8ce5d60ea0..65f3475ef6 100644
          }
  
 +        if (first_constant)
-+            first_constant[i] /= 16;
++            first_constant[i] /= sizeof(struct wined3d_vec4);
 +        if (num_constants)
-+            num_constants[i] /= 16;
++            num_constants[i] /= sizeof(struct wined3d_vec4);
          buffer_impl = wined3d_buffer_get_parent(wined3d_buffer);
          buffers[i] = &buffer_impl->ID3D11Buffer_iface;
          ID3D11Buffer_AddRef(buffers[i]);
-@@ -1444,7 +1450,7 @@ static void STDMETHODCALLTYPE d3d11_immediate_context_VSGetConstantBuffers(ID3D1
+@@ -1445,7 +1451,7 @@ static void STDMETHODCALLTYPE d3d11_immediate_context_VSGetConstantBuffers(ID3D1
              iface, start_slot, buffer_count, buffers);
  
      d3d11_immediate_context_get_constant_buffers(iface, WINED3D_SHADER_TYPE_VERTEX, start_slot,
@@ -54,7 +54,7 @@ index 8ce5d60ea0..65f3475ef6 100644
  }
  
  static void STDMETHODCALLTYPE d3d11_immediate_context_PSGetShaderResources(ID3D11DeviceContext1 *iface,
-@@ -1568,7 +1574,7 @@ static void STDMETHODCALLTYPE d3d11_immediate_context_PSGetConstantBuffers(ID3D1
+@@ -1569,7 +1575,7 @@ static void STDMETHODCALLTYPE d3d11_immediate_context_PSGetConstantBuffers(ID3D1
              iface, start_slot, buffer_count, buffers);
  
      d3d11_immediate_context_get_constant_buffers(iface, WINED3D_SHADER_TYPE_PIXEL, start_slot,
@@ -63,7 +63,7 @@ index 8ce5d60ea0..65f3475ef6 100644
  }
  
  static void STDMETHODCALLTYPE d3d11_immediate_context_IAGetInputLayout(ID3D11DeviceContext1 *iface,
-@@ -1663,7 +1669,7 @@ static void STDMETHODCALLTYPE d3d11_immediate_context_GSGetConstantBuffers(ID3D1
+@@ -1664,7 +1670,7 @@ static void STDMETHODCALLTYPE d3d11_immediate_context_GSGetConstantBuffers(ID3D1
              iface, start_slot, buffer_count, buffers);
  
      d3d11_immediate_context_get_constant_buffers(iface, WINED3D_SHADER_TYPE_GEOMETRY, start_slot,
@@ -72,7 +72,7 @@ index 8ce5d60ea0..65f3475ef6 100644
  }
  
  static void STDMETHODCALLTYPE d3d11_immediate_context_GSGetShader(ID3D11DeviceContext1 *iface,
-@@ -2172,7 +2178,7 @@ static void STDMETHODCALLTYPE d3d11_immediate_context_HSGetConstantBuffers(ID3D1
+@@ -2173,7 +2179,7 @@ static void STDMETHODCALLTYPE d3d11_immediate_context_HSGetConstantBuffers(ID3D1
              iface, start_slot, buffer_count, buffers);
  
      d3d11_immediate_context_get_constant_buffers(iface, WINED3D_SHADER_TYPE_HULL, start_slot,
@@ -81,7 +81,7 @@ index 8ce5d60ea0..65f3475ef6 100644
  }
  
  static void STDMETHODCALLTYPE d3d11_immediate_context_DSGetShaderResources(ID3D11DeviceContext1 *iface,
-@@ -2264,7 +2270,7 @@ static void STDMETHODCALLTYPE d3d11_immediate_context_DSGetConstantBuffers(ID3D1
+@@ -2265,7 +2271,7 @@ static void STDMETHODCALLTYPE d3d11_immediate_context_DSGetConstantBuffers(ID3D1
              iface, start_slot, buffer_count, buffers);
  
      d3d11_immediate_context_get_constant_buffers(iface, WINED3D_SHADER_TYPE_DOMAIN, start_slot,
@@ -90,7 +90,7 @@ index 8ce5d60ea0..65f3475ef6 100644
  }
  
  static void STDMETHODCALLTYPE d3d11_immediate_context_CSGetShaderResources(ID3D11DeviceContext1 *iface,
-@@ -2381,7 +2387,7 @@ static void STDMETHODCALLTYPE d3d11_immediate_context_CSGetConstantBuffers(ID3D1
+@@ -2382,7 +2388,7 @@ static void STDMETHODCALLTYPE d3d11_immediate_context_CSGetConstantBuffers(ID3D1
              iface, start_slot, buffer_count, buffers);
  
      d3d11_immediate_context_get_constant_buffers(iface, WINED3D_SHADER_TYPE_COMPUTE, start_slot,
@@ -99,7 +99,7 @@ index 8ce5d60ea0..65f3475ef6 100644
  }
  
  static void STDMETHODCALLTYPE d3d11_immediate_context_ClearState(ID3D11DeviceContext1 *iface)
-@@ -3902,7 +3908,7 @@ static void d3d10_device_get_constant_buffers(ID3D10Device1 *iface,
+@@ -3903,7 +3909,7 @@ static void d3d10_device_get_constant_buffers(ID3D10Device1 *iface,
          struct d3d_buffer *buffer_impl;
  
          if (!(wined3d_buffer = wined3d_device_get_constant_buffer(device->wined3d_device,
@@ -109,7 +109,7 @@ index 8ce5d60ea0..65f3475ef6 100644
              buffers[i] = NULL;
              continue;
 diff --git a/dlls/wined3d/device.c b/dlls/wined3d/device.c
-index 128f2485c0..c9a842bced 100644
+index 9993b95cd2..f5829b1468 100644
 --- a/dlls/wined3d/device.c
 +++ b/dlls/wined3d/device.c
 @@ -2271,9 +2271,10 @@ void CDECL wined3d_device_set_constant_buffer(struct wined3d_device *device,
@@ -164,5 +164,5 @@ index a370cd82bc..f12a5d1625 100644
          struct wined3d_device_creation_parameters *creation_parameters);
  struct wined3d_shader_resource_view * __cdecl wined3d_device_get_cs_resource_view(const struct wined3d_device *device,
 -- 
-2.14.1
+2.17.0
 

@@ -1,4 +1,4 @@
-From 457cc59b6a6403842fd54dd439485b7d0303f0e5 Mon Sep 17 00:00:00 2001
+From 731df5fa9db51331ff9efcb68172740eeeecee33 Mon Sep 17 00:00:00 2001
 From: Kimmo Myllyvirta <kimmoXXXXXXXX>
 Date: Sun, 27 May 2018 10:01:10 +0200
 Subject: [PATCH 4/5] d3d11: Implement the SetConstantBuffers1 methods.
@@ -9,10 +9,10 @@ Signed-off-by: Pablo Martin <pmartXXXXXXXXX>
  1 file changed, 24 insertions(+), 6 deletions(-)
 
 diff --git a/dlls/d3d11/device.c b/dlls/d3d11/device.c
-index 65f3475ef6..ecf0e83f78 100644
+index 6170a74da7..592660ad62 100644
 --- a/dlls/d3d11/device.c
 +++ b/dlls/d3d11/device.c
-@@ -2547,48 +2547,66 @@ static void STDMETHODCALLTYPE d3d11_immediate_context_VSSetConstantBuffers1(ID3D
+@@ -2548,48 +2548,66 @@ static void STDMETHODCALLTYPE d3d11_immediate_context_VSSetConstantBuffers1(ID3D
          UINT start_slot, UINT buffer_count, ID3D11Buffer * const *buffers, const UINT *first_constant,
          const UINT *num_constants)
  {
@@ -86,5 +86,5 @@ index 65f3475ef6..ecf0e83f78 100644
  
  static void STDMETHODCALLTYPE d3d11_immediate_context_VSGetConstantBuffers1(ID3D11DeviceContext1 *iface,
 -- 
-2.14.1
+2.17.0
 
