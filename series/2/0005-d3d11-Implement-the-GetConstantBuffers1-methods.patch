@@ -17,7 +17,7 @@ index 592660ad62..8c9a650680 100644
          UINT start_slot, UINT buffer_count, ID3D11Buffer **buffers, UINT *first_constant, UINT *num_constants)
  {
 -    FIXME("iface %p, start_slot %u, buffer_count %u, buffers %p, first_constant %p, num_constants %p stub!\n",
-+    TRACE("iface %p, start_slot %u, buffer_count %u, buffers %p, first_constant %p, first_constant %p.\n",
++    TRACE("iface %p, start_slot %u, buffer_count %u, buffers %p, first_constant %p, num_constants %p.\n",
              iface, start_slot, buffer_count, buffers, first_constant, num_constants);
 +
 +    d3d11_immediate_context_get_constant_buffers(iface, WINED3D_SHADER_TYPE_VERTEX, start_slot,
