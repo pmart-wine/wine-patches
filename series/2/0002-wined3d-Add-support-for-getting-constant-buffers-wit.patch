@@ -1,4 +1,4 @@
-From 00c8a124d609ea47913a392ebfb834c482056d78 Mon Sep 17 00:00:00 2001
+From cd16b83c6b606dd41efbe0c284de411583b73058 Mon Sep 17 00:00:00 2001
 From: Pablo Martin <pmartXXXXXXX>
 Date: Sun, 27 May 2018 09:49:34 +0200
 Subject: [PATCH 2/5] wined3d: Add support for getting constant buffers with
@@ -13,7 +13,7 @@ Signed-off-by: Pablo Martin <pmartXXXXXXXXX>
  4 files changed, 25 insertions(+), 13 deletions(-)
 
 diff --git a/dlls/d3d11/device.c b/dlls/d3d11/device.c
-index 64a9b98477..6170a74da7 100644
+index 64a9b98477..022ee9b5ab 100644
 --- a/dlls/d3d11/device.c
 +++ b/dlls/d3d11/device.c
 @@ -98,7 +98,8 @@ static ULONG STDMETHODCALLTYPE d3d11_immediate_context_Release(ID3D11DeviceConte
@@ -109,10 +109,10 @@ index 64a9b98477..6170a74da7 100644
              buffers[i] = NULL;
              continue;
 diff --git a/dlls/wined3d/device.c b/dlls/wined3d/device.c
-index 9993b95cd2..f5829b1468 100644
+index 16556274b1..8e2c2c51ce 100644
 --- a/dlls/wined3d/device.c
 +++ b/dlls/wined3d/device.c
-@@ -2271,9 +2271,10 @@ void CDECL wined3d_device_set_constant_buffer(struct wined3d_device *device,
+@@ -2273,9 +2273,10 @@ void CDECL wined3d_device_set_constant_buffer(struct wined3d_device *device,
  }
  
  struct wined3d_buffer * CDECL wined3d_device_get_constant_buffer(const struct wined3d_device *device,
@@ -125,16 +125,16 @@ index 9993b95cd2..f5829b1468 100644
  
      if (idx >= MAX_CONSTANT_BUFFERS)
      {
-@@ -2281,6 +2282,11 @@ struct wined3d_buffer * CDECL wined3d_device_get_constant_buffer(const struct wi
+@@ -2283,6 +2284,11 @@ struct wined3d_buffer * CDECL wined3d_device_get_constant_buffer(const struct wi
          return NULL;
      }
  
 +    if (offset)
-+        *offset = device->state.cb_offset[shader_type][idx];
++        *offset = device->state.constant_buffer[shader_type][idx].offset;
 +    if (size)
-+        *size = device->state.cb_size[shader_type][idx];
++        *size = device->state.constant_buffer[shader_type][idx].size;
 +
-     return device->state.cb[shader_type][idx];
+     return device->state.constant_buffer[shader_type][idx].buffer;
  }
  
 diff --git a/dlls/wined3d/wined3d.spec b/dlls/wined3d/wined3d.spec
