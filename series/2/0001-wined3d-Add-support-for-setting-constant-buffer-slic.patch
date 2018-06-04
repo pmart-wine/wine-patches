@@ -9,16 +9,19 @@ Remarks:
 
 - changing cb pointer array to wined3d_constant_buffer structure array
   to better accommodate for new binding parameters.
-- d3d11 is using constants as slice parameters, while wined3d is using bytes,
-  this requires a correction factor of 16 since each constant is 16 bytes
-  (4x32 bit components each):
-  - would it be better to make wined3d also use constants?
+- d3d11 is using number of constants as range parameters, while wined3d is
+  using bytes, this requires a correction factor of 16 since each constant
+  is 16 bytes (4x32 bit components each):
+  - would it be better to make wined3d also use number of constants?
   - is sizeof(struct wined3d_vec4) the best way to apply the correction?
   - Should we introduce a constant to refer to this size?
 - When setting NULL size and offset (either explicitly or because of using the
   old SetConstantBuffer method), size is internally set to 4096.
   - Should this undocumented behaviour be implemented?
-- Offset and size parameters should be set in multiples of 16 constants.
+  - Otherwise since size 0 actually means 0 size (out of bounds read)
+    we'd need to use some other special value to represent the whole
+    buffer.
+- Offset and size parameters must be set in multiples of 16 constants.
   - Atm I'm checking against '& 0xff'. Should a constant be introduced here?
   - Should this check better done at the d3d11 side?
 
@@ -26,10 +29,10 @@ Pending issues:
 
 - glBindBufferRange does not specify behaviour when accessing out of bounds
   values from the bound buffer range. d3d11 requires out of bound access
-  to return 0 values.
+  to return values of 0.
   - Behaviour in this case is undetermined in opengl, works as d3d11 in
     some gfx/drivers but not others.
-  - Tests show at least.
+  - Tests show at least intel, amdgpu succeeds, nvidia fails.
 - glBindBufferRange does not accept 0 size for the range, we can set
   out of bounds values so we rely on out of bounds behaviour instead.
 
