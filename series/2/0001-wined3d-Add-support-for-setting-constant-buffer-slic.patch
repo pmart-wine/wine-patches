@@ -15,7 +15,7 @@ Remarks:
   - would it be better to make wined3d also use constants?
   - is sizeof(struct wined3d_vec4) the best way to apply the correction?
   - Should we introduce a constant to refer to this size?
-- Regarding naming, would 'slice' or 'range' better fit to referring to the
+- Regarding naming, would 'slice' or 'range' better fit in referring to the
   offset+size mechanic?
 - When setting NULL size and offset (either explicitly or because of using the
   old SetConstantBuffer method), size is internally set to 4096.
@@ -27,11 +27,15 @@ Remarks:
 Pending issues:
 
 - When binding a limited size inside the cb array, access beyond bounds
-  is not returning 0 as it should.
+  is not returning 0 as it should on some gfx/drivers.
 - I have worked around some corner cases (offset beyond bounds or zero
   size), by setting offset to the end of the array, that seems to
-  provide better behaviour. Fixing the former point would make this
-  workaround unneeded.
+  provide better behaviour for problematic gfx/drivers. Fixing the former
+  point would make this workaround unneeded.
+  - The problem is glBindBufferRange does not specify behaviour when
+    accessing out of bounds values from the bound buffer range.
+  - The test related to this issue fails on some gfx/drivers and
+    succeeds in others (tested nvidia fails and intel succeeds).
 
  dlls/d3d11/device.c            | 24 ++++++++++++++----------
  dlls/wined3d/context.c         |  4 ++--
