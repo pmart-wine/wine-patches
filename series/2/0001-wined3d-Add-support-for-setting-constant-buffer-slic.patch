@@ -324,7 +324,7 @@ index 3b2f84538d..173aac11d0 100644
 +                offset = buffer->desc.byte_width;
 +                size = buffer->desc.byte_width;
 +            }
-+            GL_EXTCALL(glBindBufferRange(GL_UNIFORM_BUFFER, base + i, buffer, offset, size));
++            GL_EXTCALL(glBindBufferRange(GL_UNIFORM_BUFFER, base + i, buffer->buffer_object, offset, size));
 +        }
 +        else
 +            GL_EXTCALL(glBindBufferBase(GL_UNIFORM_BUFFER, base + i, buffer ? buffer->buffer_object : 0));
