@@ -259,7 +259,7 @@ index 8ef74b6ef0..16556274b1 100644
 +        WARN("Offset and size must be multiples of 16 %u %u.\n", offset, size);
 +        return;
 +    }
-+    if (size > MAX_IMMEDIATE_CONSTANT_BUFFER_SIZE*sizeof(struct wined3d_vec4))
++    if (size > MAX_IMMEDIATE_CONSTANT_BUFFER_SIZE * sizeof(struct wined3d_vec4))
 +    {
 +        WARN("Size value too big %u.\n", size);
 +        return;
@@ -320,12 +320,12 @@ index 3b2f84538d..173aac11d0 100644
 +        size = state->constant_buffer[shader_type][i].size;
 +        if (buffer && (offset || size != MAX_IMMEDIATE_CONSTANT_BUFFER_SIZE * sizeof(struct wined3d_vec4)))
 +        {
-+            if (size == 0 || offset > buffer->desc.byte_width)
++            if (size == 0)
 +            {
-+                size = buffer->desc.byte_width;
 +                offset = buffer->desc.byte_width;
++                size = buffer->desc.byte_width;
 +            }
-+            GL_EXTCALL(glBindBufferRange(GL_UNIFORM_BUFFER, base + i, buffer ? buffer->buffer_object : 0, offset, size));
++            GL_EXTCALL(glBindBufferRange(GL_UNIFORM_BUFFER, base + i, buffer, offset, size));
 +        }
 +        else
 +            GL_EXTCALL(glBindBufferBase(GL_UNIFORM_BUFFER, base + i, buffer ? buffer->buffer_object : 0));
