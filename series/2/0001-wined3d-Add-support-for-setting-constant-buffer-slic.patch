@@ -144,7 +144,7 @@ index e7dd62cb3c..64a9b98477 100644
  
          wined3d_device_set_constant_buffer(device->wined3d_device, type, start_slot + i,
 -                buffer ? buffer->wined3d_buffer : NULL);
-+                buffer ? buffer->wined3d_buffer : NULL, 0, 0);
++                buffer ? buffer->wined3d_buffer : NULL, 0, 4096 * sizeof(struct wined3d_vec4));
      }
      wined3d_mutex_unlock();
  }
