@@ -1,4 +1,4 @@
-From cd16b83c6b606dd41efbe0c284de411583b73058 Mon Sep 17 00:00:00 2001
+From 3bf4e4c7dc7c9479e0de90e2ca5eb1f90f38c7e1 Mon Sep 17 00:00:00 2001
 From: Pablo Martin <pmartXXXXXXX>
 Date: Sun, 27 May 2018 09:49:34 +0200
 Subject: [PATCH 2/5] wined3d: Add support for getting constant buffers with

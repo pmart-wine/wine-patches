@@ -1,4 +1,4 @@
-From 731df5fa9db51331ff9efcb68172740eeeecee33 Mon Sep 17 00:00:00 2001
+From 20fa8a48b90bc582588476f5b4eb10433a9dd0e2 Mon Sep 17 00:00:00 2001
 From: Kimmo Myllyvirta <kimmoXXXXXXXX>
 Date: Sun, 27 May 2018 10:01:10 +0200
 Subject: [PATCH 4/5] d3d11: Implement the SetConstantBuffers1 methods.
@@ -9,7 +9,7 @@ Signed-off-by: Pablo Martin <pmartXXXXXXXXX>
  1 file changed, 24 insertions(+), 6 deletions(-)
 
 diff --git a/dlls/d3d11/device.c b/dlls/d3d11/device.c
-index 6170a74da7..592660ad62 100644
+index 022ee9b5ab..1a0957d5c2 100644
 --- a/dlls/d3d11/device.c
 +++ b/dlls/d3d11/device.c
 @@ -2548,48 +2548,66 @@ static void STDMETHODCALLTYPE d3d11_immediate_context_VSSetConstantBuffers1(ID3D

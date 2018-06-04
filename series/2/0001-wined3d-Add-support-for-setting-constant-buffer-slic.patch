@@ -1,4 +1,4 @@
-From 7f5eed9a0a7278af5d2d028c29f18056a577ba59 Mon Sep 17 00:00:00 2001
+From 541114cf259fccd8aad26fc70c276f19b952494e Mon Sep 17 00:00:00 2001
 From: Kimmo Myllyvirta <kimmoXXXXXXXX>
 Date: Sat, 2 Jun 2018 13:39:17 +0200
 Subject: [PATCH 1/5] wined3d: Add support for setting constant buffer slices.
@@ -40,9 +40,9 @@ Pending issues:
  dlls/wined3d/state.c           | 18 +++++++++++++++---
  dlls/wined3d/stateblock.c      |  4 ++--
  dlls/wined3d/wined3d.spec      |  2 +-
- dlls/wined3d/wined3d_private.h | 14 ++++++++++++--
+ dlls/wined3d/wined3d_private.h | 11 +++++++++--
  include/wine/wined3d.h         |  2 +-
- 9 files changed, 86 insertions(+), 35 deletions(-)
+ 9 files changed, 83 insertions(+), 35 deletions(-)
 
 diff --git a/dlls/d3d11/device.c b/dlls/d3d11/device.c
 index e7dd62cb3c..64a9b98477 100644
@@ -68,8 +68,8 @@ index e7dd62cb3c..64a9b98477 100644
          wined3d_device_set_constant_buffer(device->wined3d_device, type, start_slot + i,
 -                buffer ? buffer->wined3d_buffer : NULL);
 +                buffer ? buffer->wined3d_buffer : NULL,
-+                is_slice ? first_constant[i] * sizeof(struct wined3d_vec4) : 0,
-+                is_slice ? num_constants[i] * sizeof(struct wined3d_vec4) : 0);
++                (is_slice ? first_constant[i] : 0) * sizeof(struct wined3d_vec4),
++                (is_slice ? num_constants[i] : 4096) * sizeof(struct wined3d_vec4));
      }
      wined3d_mutex_unlock();
  }
@@ -314,7 +314,7 @@ index 3b2f84538d..173aac11d0 100644
 +        buffer = state->constant_buffer[shader_type][i].buffer;
 +        offset = state->constant_buffer[shader_type][i].offset;
 +        size = state->constant_buffer[shader_type][i].size;
-+        if (buffer && (offset || size != 4096 * sizeof(struct wined3d_vec4)))
++        if (buffer && (offset || size != MAX_IMMEDIATE_CONSTANT_BUFFER_SIZE * sizeof(struct wined3d_vec4)))
 +        {
 +            if (size == 0 || offset > buffer->desc.byte_width)
 +            {
@@ -358,7 +358,7 @@ index 93cecf0d3b..3cff133e64 100644
  @ cdecl wined3d_device_set_cs_sampler(ptr long ptr)
  @ cdecl wined3d_device_set_cs_uav(ptr long ptr long)
 diff --git a/dlls/wined3d/wined3d_private.h b/dlls/wined3d/wined3d_private.h
-index 33bc463b94..55c2770575 100644
+index 33bc463b94..7d8fb921fe 100644
 --- a/dlls/wined3d/wined3d_private.h
 +++ b/dlls/wined3d/wined3d_private.h
 @@ -2796,6 +2796,13 @@ struct wined3d_blend_state
