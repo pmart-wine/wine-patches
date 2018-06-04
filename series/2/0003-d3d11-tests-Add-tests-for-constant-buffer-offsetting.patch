@@ -64,7 +64,7 @@ index 1043722eb5..ef1c3223d2 100644
 +}
 +
 +
-+static void test_buffer_offset(void)
++static void test_buffer_bind_range(void)
 +{
 +    struct d3d11_test_context test_context;
 +    ID3D11PixelShader *ps;
@@ -275,7 +275,7 @@ index 1043722eb5..ef1c3223d2 100644
 +    release_test_context(&test_context);
 +}
 +
-+static void test_buffer_offset2(void)
++static void test_buffer_bind_range2(void)
 +{
 +    struct d3d11_test_context test_context;
 +    ID3D11PixelShader *ps;
@@ -432,8 +432,8 @@ index 1043722eb5..ef1c3223d2 100644
      run_for_each_feature_level(test_device_interfaces);
      test_get_immediate_context();
      test_create_texture1d();
-+    test_buffer_offset();
-+    test_buffer_offset2();
++    test_buffer_bind_range();
++    test_buffer_bind_range2();
      test_texture1d_interfaces();
      test_create_texture2d();
      test_texture2d_interfaces();
