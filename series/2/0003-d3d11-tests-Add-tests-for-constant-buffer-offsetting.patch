@@ -255,7 +255,7 @@ index 1043722eb5..ef1c3223d2 100644
 +    offset[0] = 64;
 +    size[0] = 16;
 +    ID3D11DeviceContext1_PSSetConstantBuffers1(context1, 0, 1, &ps_cb, offset, size);
-+    check_simple_buffer_offset(&test_context, 64, 16, 320, 239, 0xffffff00);
++    todo_wine check_simple_buffer_offset(&test_context, 64, 16, 320, 239, 0xffffff00);
 +
 +    /* reset */
 +    offset[0] = 16;
@@ -266,7 +266,7 @@ index 1043722eb5..ef1c3223d2 100644
 +    offset[0] = 0;
 +    size[0] = 0;
 +    ID3D11DeviceContext1_PSSetConstantBuffers1(context1, 0, 1, &ps_cb, offset, size);
-+    check_simple_buffer_offset(&test_context, 0, 0, 320, 239, 0xffffff00);
++    todo_wine check_simple_buffer_offset(&test_context, 0, 0, 320, 239, 0xffffff00);
 +
 +    /* clean up */
 +    ID3D11Buffer_Release(ps_cb);
