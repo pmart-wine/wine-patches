@@ -15,8 +15,6 @@ Remarks:
   - would it be better to make wined3d also use constants?
   - is sizeof(struct wined3d_vec4) the best way to apply the correction?
   - Should we introduce a constant to refer to this size?
-- Regarding naming, would 'slice' or 'range' better fit in referring to the
-  offset+size mechanic?
 - When setting NULL size and offset (either explicitly or because of using the
   old SetConstantBuffer method), size is internally set to 4096.
   - Should this undocumented behaviour be implemented?
@@ -26,16 +24,14 @@ Remarks:
 
 Pending issues:
 
-- When binding a limited size inside the cb array, access beyond bounds
-  is not returning 0 as it should on some gfx/drivers.
-- I have worked around some corner cases (offset beyond bounds or zero
-  size), by setting offset to the end of the array, that seems to
-  provide better behaviour for problematic gfx/drivers. Fixing the former
-  point would make this workaround unneeded.
-  - The problem is glBindBufferRange does not specify behaviour when
-    accessing out of bounds values from the bound buffer range.
-  - The test related to this issue fails on some gfx/drivers and
-    succeeds in others (tested nvidia fails and intel succeeds).
+- glBindBufferRange does not specify behaviour when accessing out of bounds
+  values from the bound buffer range. d3d11 requires out of bound access
+  to return 0 values.
+  - Behaviour in this case is undetermined in opengl, works as d3d11 in
+    some gfx/drivers but not others.
+  - Tests show at least.
+- glBindBufferRange does not accept 0 size for the range, we can set
+  out of bounds values so we rely on out of bounds behaviour instead.
 
  dlls/d3d11/device.c            | 24 ++++++++++++++----------
  dlls/wined3d/context.c         |  4 ++--
@@ -62,7 +58,7 @@ index e7dd62cb3c..64a9b98477 100644
  {
      struct d3d_device *device = device_from_immediate_ID3D11DeviceContext1(iface);
      unsigned int i;
-+    BOOL is_slice = first_constant && num_constants;
++    BOOL is_range = first_constant && num_constants;
  
      wined3d_mutex_lock();
      for (i = 0; i < buffer_count; ++i)
@@ -72,8 +68,8 @@ index e7dd62cb3c..64a9b98477 100644
          wined3d_device_set_constant_buffer(device->wined3d_device, type, start_slot + i,
 -                buffer ? buffer->wined3d_buffer : NULL);
 +                buffer ? buffer->wined3d_buffer : NULL,
-+                (is_slice ? first_constant[i] : 0) * sizeof(struct wined3d_vec4),
-+                (is_slice ? num_constants[i] : 4096) * sizeof(struct wined3d_vec4));
++                (is_range ? first_constant[i] : 0) * sizeof(struct wined3d_vec4),
++                (is_range ? num_constants[i] : 4096) * sizeof(struct wined3d_vec4));
      }
      wined3d_mutex_unlock();
  }
