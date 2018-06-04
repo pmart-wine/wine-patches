@@ -1,7 +1,7 @@
 From a1a80e6311501e46fca088ba1fd2ca8a96747230 Mon Sep 17 00:00:00 2001
 From: Pablo Martin <pmartXXXXXXX>
 Date: Sun, 27 May 2018 10:04:25 +0200
-Subject: [PATCH 5/5] d3d11: Implement the GetConstantBuffers1 methods.
+Subject: [PATCH 5/5] d3d11: Partially implement the GetConstantBuffers1 methods.
 
 Signed-off-by: Pablo Martin <pmartXXXXXXXXX>
 ---

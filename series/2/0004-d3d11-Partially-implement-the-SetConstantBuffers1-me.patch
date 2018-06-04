@@ -1,7 +1,7 @@
 From 20fa8a48b90bc582588476f5b4eb10433a9dd0e2 Mon Sep 17 00:00:00 2001
 From: Kimmo Myllyvirta <kimmoXXXXXXXX>
 Date: Sun, 27 May 2018 10:01:10 +0200
-Subject: [PATCH 4/5] d3d11: Implement the SetConstantBuffers1 methods.
+Subject: [PATCH 4/5] d3d11: Partially implement the SetConstantBuffers1 methods.
 
 Signed-off-by: Pablo Martin <pmartXXXXXXXXX>
 ---
